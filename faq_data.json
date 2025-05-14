@@ -1,0 +1,62 @@
+[
+  {
+    "question": "What is your return policy?",
+    "answer": "You can return most items within 30 days of delivery for a full refund. Items must be unused and in original packaging. Some items like perishable goods and personal care products are not eligible for return."
+  },
+  {
+    "question": "How do I track my order?",
+    "answer": "Once your order ships, we’ll send you a confirmation email with a tracking link. You can also view tracking updates in your account under 'My Orders'."
+  },
+  {
+    "question": "Do you ship internationally?",
+    "answer": "Yes, we ship to most countries worldwide. Shipping fees and delivery times vary depending on location and will be calculated at checkout."
+  },
+  {
+    "question": "How can I contact customer support?",
+    "answer": "You can reach our support team via email at support@example.com, or live chat with us Monday through Friday, 9 AM to 6 PM (EST)."
+  },
+  {
+    "question": "What payment methods do you accept?",
+    "answer": "We accept major credit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, and Google Pay."
+  },
+  {
+    "question": "Do you offer gift cards?",
+    "answer": "Yes, we offer digital gift cards in amounts ranging from $10 to $500. They can be emailed directly to the recipient and never expire."
+  },
+  {
+    "question": "Can I change or cancel my order?",
+    "answer": "We begin processing orders immediately, so changes or cancellations are not guaranteed. Please contact us as soon as possible if you need to modify an order."
+  },
+  {
+    "question": "Are your products eco-friendly?",
+    "answer": "Many of our products are made from sustainable materials or packaged in eco-friendly materials. Look for the 'Eco Certified' badge on qualifying products."
+  },
+  {
+    "question": "What if I receive a damaged or incorrect item?",
+    "answer": "Please contact us within 7 days of delivery with a photo of the damage or wrong item. We’ll arrange a replacement or refund immediately."
+  },
+  {
+    "question": "How long will it take to receive my order?",
+    "answer": "Standard shipping usually takes 3–7 business days within the U.S. International shipping can take 7–21 business days depending on customs and location."
+  },
+  {
+    "question": "Do you offer expedited shipping?",
+    "answer": "Yes, we offer 2-day and overnight shipping options at checkout. Expedited orders placed before 1 PM (EST) ship the same day."
+  },
+  {
+    "question": "Is my payment information secure?",
+    "answer": "Absolutely. All transactions are encrypted using SSL technology, and we never store your full payment details."
+  },
+  {
+    "question": "Can I create a wishlist?",
+    "answer": "Yes, when logged into your account, you can add items to your wishlist to save them for later."
+  },
+  {
+    "question": "Do you offer wholesale pricing or bulk discounts?",
+    "answer": "Yes, for orders over 50 units or for business inquiries, please email wholesale@example.com for a custom quote."
+  },
+  {
+    "question": "What is your policy on backordered items?",
+    "answer": "If an item is backordered, we’ll notify you and ship it as soon as it becomes available. You won’t be charged until the item ships."
+  }
+]
