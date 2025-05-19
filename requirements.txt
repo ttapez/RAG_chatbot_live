@@ -1,0 +1,14 @@
+# --- Web framework & server ---
+fastapi==0.110.2          # modern FastAPI (needs pydantic >=2, see next line)
+pydantic==2.7.1           # FastAPI's data validation / settings
+uvicorn[standard]==0.29.0 # ASGI dev server (WebSockets, reload, etc.)
+gunicorn==22.0.0          # Production-grade process manager
+
+# --- LLM & RAG stack ---
+llama-cpp-python==0.2.67  # CPU‐only GGUF runner (no GPU needed)
+langchain==0.0.354        # Works with pydantic v1/v2 via compatibility layer
+faiss-cpu==1.7.4          # Vector store backend used by LangChain
+sentence-transformers==0.5.1  # Provides HuggingFaceEmbeddings (miniLM etc.)
+
+# --- Utilities ---
+watchfiles==0.21.0        # Enables --reload during local dev (optional)
