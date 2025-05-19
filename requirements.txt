@@ -7,8 +7,16 @@ gunicorn==22.0.0          # Production-grade process manager
 # --- LLM & RAG stack ---
 llama-cpp-python==0.2.67  # CPU‐only GGUF runner (no GPU needed)
 langchain==0.0.354        # Works with pydantic v1/v2 via compatibility layer
-faiss-cpu==1.7.4          # Vector store backend used by LangChain
-sentence-transformers==0.5.1  # Provides HuggingFaceEmbeddings (miniLM etc.)
+faiss-cpu==1.8.0          # Vector store backend used by LangChain
+
+# --- ML stack (CPU-only, no CUDA downloads) ------------------------------
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+sentence-transformers==2.3.1     # pulls transformers + numpy, uses CPU BLAS
+transformers==4.39.3             # (explicit pin keeps versions in sync)
+
 
 # --- Utilities ---
 watchfiles==0.21.0        # Enables --reload during local dev (optional)
