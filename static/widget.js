@@ -4,10 +4,12 @@
 
    (function () {
     /* ---------- 1. CONFIG ------------------------------------------------ */
-    const TAG          = document.currentScript;
-    const API_URL      = TAG.getAttribute("data-api") || "https://your-api-domain.com/ask";
-    const THEME_COLOR  = TAG.getAttribute("data-color") || "#4f46e5";
-    const GREETING     = TAG.getAttribute("data-greeting") || "Need help? Ask away!";
+    const SCRIPT_TAG  = document.currentScript;                      // correct var
+    const API_URL     = SCRIPT_TAG.getAttribute("data-api") ||       // uses attr
+                    "https://your-api-domain.com/ask";            // fallback
+    const THEME_COLOR = SCRIPT_TAG.getAttribute("data-color") || "#4f46e5";
+    const GREETING    = SCRIPT_TAG.getAttribute("data-greeting") ||
+                    "Need help? Ask away!";
   
     /* ---------- 2. STYLES ------------------------------------------------ */
     const style = document.createElement("style");
