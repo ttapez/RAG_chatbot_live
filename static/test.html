@@ -2,132 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FAQ Chat Widget Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ Chatbot – Live Test Page</title>
+
+  <!-- simple page styling, not required for the widget -->
   <style>
-    #chat-button {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      font-size: 24px;
-      cursor: pointer;
-    }
-
-    #chat-box {
-      position: fixed;
-      bottom: 90px;
-      right: 20px;
-      width: 300px;
-      max-height: 400px;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      display: none;
-      flex-direction: column;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      overflow: hidden;
-      font-family: sans-serif;
-    }
-
-    #chat-header {
-      background-color: #007bff;
-      color: white;
-      padding: 10px;
-      font-weight: bold;
-    }
-
-    #chat-messages {
-      padding: 10px;
-      flex: 1;
-      overflow-y: auto;
-      font-size: 14px;
-    }
-
-    #chat-input {
-      display: flex;
-      border-top: 1px solid #ccc;
-    }
-
-    #chat-input input {
-      flex: 1;
-      padding: 8px;
-      border: none;
-      outline: none;
-    }
-
-    #chat-input button {
-      padding: 8px 12px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+    body {font-family: Arial, Helvetica, sans-serif; padding: 40px;}
+    h2   {color:#4f46e5;}
   </style>
 </head>
 <body>
 
-<button id="chat-button">💬</button>
+  <h2>FAQ Chatbot – Server test</h2>
+  <p>Click the chat bubble in the bottom-right corner and ask a question.</p>
 
-<div id="chat-box">
-  <div id="chat-header">Ask a Question</div>
-  <div id="chat-messages"></div>
-  <div id="chat-input">
-    <input type="text" id="user-input" placeholder="Type your question..." />
-    <button onclick="sendMessage()">Send</button>
-  </div>
-</div>
-
-<script>
-  const chatButton = document.getElementById('chat-button');
-  const chatBox = document.getElementById('chat-box');
-  const chatMessages = document.getElementById('chat-messages');
-  const userInput = document.getElementById('user-input');
-
-  chatButton.onclick = () => {
-    chatBox.style.display = chatBox.style.display === 'flex' ? 'none' : 'flex';
-  };
-
-  async function sendMessage() {
-    const message = userInput.value.trim();
-    if (!message) return;
-
-    appendMessage('You', message);
-    userInput.value = '';
-
-    try {
-      const response = await fetch('http://127.0.0.1:8000/ask', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ question: message })
-      });
-
-      const data = await response.json();
-      appendMessage('Bot', data.answer || 'Sorry, no answer.');
-    } catch (error) {
-      appendMessage('Bot', 'Error contacting server.');
-    }
-  }
-
-  function appendMessage(sender, text) {
-    const msg = document.createElement('div');
-    msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chatMessages.appendChild(msg);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-</script><script async
-        src="/static/widget.js?v=5"   <!-- rotate ?v=3,4… when you update the file -->
-        data-api="http://18.130.81.23/ask"               <!-- FastAPI endpoint served by Nginx -->
-        data-color="#4f46e5"          <!-- brand color for bubble / header -->
-        data-greeting="Need help? Ask away!">
-</script>
+  <!-- ───────────────  Chat-widget loader (ONLY script you need) ─────────────── -->
+  <script async
+          src="/static/widget.js?v=5"        <!-- bump ?v=6 etc. if you update the JS -->
+          data-api="http://18.130.81.23/ask" <!-- full URL to your FastAPI endpoint -->
+          data-color="#4f46e5"               <!-- bubble / header colour -->
+          data-greeting="Need help? Ask away!">
+  </script>
+  <!-- ─────────────────────────────────────────────────────────────────────────── -->
 
 </body>
 </html>
