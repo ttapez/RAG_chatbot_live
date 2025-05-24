@@ -6,7 +6,7 @@
     /* ---------- 1. CONFIG ------------------------------------------------ */
     const SCRIPT_TAG  = document.currentScript;                      // correct var
     const API_URL     = SCRIPT_TAG.getAttribute("data-api") ||       // uses attr
-                    "http://18.130.81.23/ask";            // fallback
+                    "http://18.134.133.143/ask";            // fallback
     const THEME_COLOR = SCRIPT_TAG.getAttribute("data-color") || "#4f46e5";
     const GREETING    = SCRIPT_TAG.getAttribute("data-greeting") ||
                     "Need help? Ask away!";
