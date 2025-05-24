@@ -32,7 +32,6 @@ faiss_index = FAISS.from_documents(faq_docs, embedding_model)
 # --- Load LLaMA Model (local .ggml/.gguf file) ---
 llm = LlamaCpp(
     model_path= "/home/ubuntu/RAG_chatbot_live/models/llama-2-7b-chat.Q4_K_M.gguf",  # adjust path to your model
-    n_threads=4,       # same as --threads
     n_ctx=2048,
     temperature=0.4,
     max_tokens=120,   # keeps replies short
