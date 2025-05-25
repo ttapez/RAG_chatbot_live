@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Header, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import json
+import db
 
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
@@ -68,6 +69,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---------- API-key dependency ----------
+async def get_tenant_id(x_api_key: str = Header(...)):
+    tenant = db.get_tenant(x_api_key)
+    if not tenant:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return tenant   # dict with id & faq_path
+
 
 # --- FastAPI Request Schema ---
 class QueryRequest(BaseModel):
@@ -75,18 +83,20 @@ class QueryRequest(BaseModel):
 
 # --- Endpoint ---
 @app.post("/ask")
-def ask_question(request: QueryRequest):
+def ask_question(
+    request: QueryRequest,
+    tenant = Depends(get_tenant_id)          # <-- injects dict
+):
     query = request.question
 
-    # Retrieve relevant docs
-    relevant_docs = faiss_index.similarity_search(query, k=2)
-    if not relevant_docs:
-        return {"answer": "I'm sorry, I don't know the answer to that."}
-    context = "\n".join([doc.page_content for doc in relevant_docs])
+    # 1) load / cache the correct FAISS index
+    index = load_index_for(tenant["id"], tenant["faq_path"])
 
-    # Construct prompt
+    # 2) similarity search
+    relevant_docs = index.similarity_search(query, k=2)
+    context = "\n".join(d.page_content for d in relevant_docs) if relevant_docs else ""
+
+    # 3) generate
     prompt = prompt_template.format(context=context, question=query)
-
-    # Generate response
-    answer = llm(prompt)
+    answer = llm(prompt) if context else "I'm sorry, I don't know the answer to that."
     return {"answer": answer.strip()}
