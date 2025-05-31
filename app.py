@@ -12,8 +12,8 @@ from functools import lru_cache
 from pathlib import Path
 
 # === LangChain + FAISS (CPU) for RAG ===
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 
@@ -101,7 +101,7 @@ def load_index_for(tenant_id: str, faq_json_path: str) -> FAISS:
 MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 
 # 4-bit quantized tokenizer + model; device_map="auto" will place layers on GPU/CPU
-tokenizer = LlamaTokenizer.from_pretrained(MODEL_NAME)
+tokenizer = LlamaTokenizer.from_pretrained(MODEL_NAME, use_auth_token=True)
 
 model = LlamaForCausalLM.from_pretrained(
     MODEL_NAME,
