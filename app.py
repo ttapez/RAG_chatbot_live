@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, Header, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from llama_cpp import Llama
 import os, json, pickle, db
 
 from functools import lru_cache
@@ -32,8 +33,10 @@ embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 faiss_index = FAISS.from_documents(faq_docs, embedding_model)
 
 # --- Load LLaMA Model (local .ggml/.gguf file) ---
-llm = LlamaCpp(
-    model_path= "/home/ubuntu/RAG_chatbot_live/models/llama-2-7b-chat.Q4_K_M.gguf",  # adjust path to your model
+llm = Llama(
+    model_path= "/home/ubuntu/RAG_chatbot_live/models/llama-3.1-8b-chat.Q4_K_M.gguf",  # adjust path to your model
+    use_gpu=True,
+    n_gpu_layers=40,
     n_ctx=2048,
     temperature=0.4,
     max_tokens=120,   # keeps replies short
