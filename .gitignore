@@ -1,3 +1,7 @@
 venv/
 models/
 __pycache__/
+data/0cd393eb899d4cb28ee7c5efcf0a3e94/faiss.index/
+data/0cd393eb899d4cb28ee7c5efcf0a3e94/meta.pkl
+data/5e60336e53c5407fb2b84086d50bc32c/faiss.index/
+data/5e60336e53c5407fb2b84086d50bc32c/meta.pkl
