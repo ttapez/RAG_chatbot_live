@@ -98,7 +98,7 @@ def load_index_for(tenant_id: str, faq_json_path: str) -> FAISS:
 # ------------------------ Load Hugging Face Llama 3.1 8B ------------------------
 
 # MODEL_NAME can be changed to any HF‐hosted 8B model (e.g. "meta-llama/Llama-3.1-8B-Instruct")
-MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
+MODEL_NAME = "meta-llama/Llama-3.1-8B-Chat"
 
 # 4-bit quantized tokenizer + model; device_map="auto" will place layers on GPU/CPU
 tokenizer = LlamaTokenizer.from_pretrained(MODEL_NAME, use_auth_token=True)
@@ -109,6 +109,7 @@ model = LlamaForCausalLM.from_pretrained(
     device_map="auto",
     torch_dtype=torch.float16,
     trust_remote_code=True,
+    use_auth_token = True
 )
 model.eval()
 
