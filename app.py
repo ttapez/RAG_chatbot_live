@@ -48,7 +48,10 @@ def load_index_for(tenant_id: str, faq_json: str) -> FAISS:
     ipath, mpath = tdir / "faiss.index", tdir / "meta.pkl"
 
     if ipath.exists() and mpath.exists():
-        return FAISS.load_local(str(ipath), EMBEDDINGS)
+        return FAISS.load_local(str(ipath),
+                                EMBEDDINGS,
+                                allow_dangerous_deserialization=True  # WE TRUST OUR OWN FILE
+                                )
 
     if not Path(faq_json).exists():
         raise FileNotFoundError(f"FAQ file not found: {faq_json}")
@@ -75,17 +78,13 @@ def load_index_for(tenant_id: str, faq_json: str) -> FAISS:
 # ---------- load Llama-3.1 8B (FP16) ----------
 MODEL_NAME = "meta-llama/Meta-Llama-3.1-8B-Instruct"
 
-tokenizer = AutoTokenizer.from_pretrained(
-    MODEL_NAME,
-    token=True,               # HF auth token already cached by `huggingface-cli login`
-)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
 model = LlamaForCausalLM.from_pretrained(
     MODEL_NAME,
     device_map="auto",
     torch_dtype=torch.float16,  # FP16 weights (≈15 GB VRAM on a T4)
-    trust_remote_code=True,
-    token=True,
+    trust_remote_code=True
 )
 model.eval()
 
