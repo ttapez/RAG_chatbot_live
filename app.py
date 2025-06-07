@@ -1,120 +1,95 @@
-from fastapi import FastAPI, Depends, Header, HTTPException, Request
+from fastapi import FastAPI, Depends, Header, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-import os
-import json
-import pickle
-import db  # your existing module that looks up tenants
-
+import json, pickle, db
 from functools import lru_cache
 from pathlib import Path
 
-# === LangChain + FAISS (CPU) for RAG ===
+# —–– LangChain + FAISS (CPU) for RAG —–
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings          # modern import
 from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 
-# === Hugging Face + bitsandbytes for Llama 3.1 8B (4-bit) inference ===
+# —–– Transformers (FP16, **no** bitsandbytes) —–
 import torch
-from transformers import LlamaForCausalLM, LlamaTokenizer
+from transformers import LlamaForCausalLM, AutoTokenizer
 
-# ------------------------ Setup FastAPI ------------------------
 app = FastAPI()
 
-# Serve widget.js (and any other static assets) under /static
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Allow CORS so your widget (served from localhost:8000 or another domain) can POST
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],      # In production, narrow this to your trusted domains
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],      # must allow X-API-Key
+    allow_headers=["*"],
 )
 
-# ------------------------ Request / Tenant Logic ------------------------
+# ---------- tenant header ----------
 class QueryRequest(BaseModel):
     question: str
 
 async def get_tenant_id(x_api_key: str = Header(...)):
-    """
-    Dependency: Extracts 'X-API-Key' header, looks up tenant in db.py.
-    If invalid, raises 401.
-    """
     tenant = db.get_tenant(x_api_key)
     if not tenant:
         raise HTTPException(status_code=401, detail="Invalid API key")
-    return tenant  # should be a dict with keys "id" and "faq_path"
+    return tenant                    # {"id": "...", "faq_path": "..."}
 
-# ------------------------ FAISS Embeddings & Indexing ------------------------
-
-# Use a small embedding model for FAQ‐vectorization
+# ---------- embeddings & index ----------
 EMBEDDINGS = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 @lru_cache(maxsize=32)
-def load_index_for(tenant_id: str, faq_json_path: str) -> FAISS:
-    """
-    Return (and cache) the FAISS index for this tenant.
-    If it doesn’t exist, build it from the FAQ JSON on disk.
-    """
-    tenant_dir = Path(f"data/{tenant_id}")
-    index_path = tenant_dir / "faiss.index"
-    meta_path = tenant_dir / "meta.pkl"
+def load_index_for(tenant_id: str, faq_json: str) -> FAISS:
+    tdir = Path(f"data/{tenant_id}")
+    ipath, mpath = tdir / "faiss.index", tdir / "meta.pkl"
 
-    # 1) If already built on disk, load and return
-    if index_path.exists() and meta_path.exists():
-        index = FAISS.load_local(str(index_path), EMBEDDINGS)
-        return index
+    if ipath.exists() and mpath.exists():
+        return FAISS.load_local(str(ipath), EMBEDDINGS)
 
-    # 2) Otherwise, build from JSON
-    if not Path(faq_json_path).exists():
-        raise FileNotFoundError(f"FAQ file not found: {faq_json_path}")
+    if not Path(faq_json).exists():
+        raise FileNotFoundError(f"FAQ file not found: {faq_json}")
 
-    with open(faq_json_path, "r", encoding="utf-8") as f:
-        faq_items = json.load(f)
+    with open(faq_json, "r", encoding="utf-8") as f:
+        items = json.load(f)
 
     docs = [
         Document(
-            page_content=f"Q: {item['question']} A: {item['answer']}",
-            metadata={"question": item["question"]},
+            page_content=f"Q: {it['question']} A: {it['answer']}",
+            metadata={"question": it["question"]},
         )
-        for item in faq_items
+        for it in items
     ]
 
     index = FAISS.from_documents(docs, EMBEDDINGS)
-
-    # Persist to disk
-    tenant_dir.mkdir(parents=True, exist_ok=True)
-    index.save_local(str(index_path))
-    with open(meta_path, "wb") as f:
+    tdir.mkdir(parents=True, exist_ok=True)
+    index.save_local(str(ipath))
+    with open(mpath, "wb") as f:
         pickle.dump({"count": len(docs)}, f)
 
     return index
 
-# ------------------------ Load Hugging Face Llama 3.1 8B ------------------------
+# ---------- load Llama-3.1 8B (FP16) ----------
+MODEL_NAME = "meta-llama/Meta-Llama-3.1-8B-Instruct"
 
-# MODEL_NAME can be changed to any HF‐hosted 8B model (e.g. "meta-llama/Llama-3.1-8B-Instruct")
-MODEL_NAME = "meta-llama/Llama-3.1-8B-Chat"
-
-# 4-bit quantized tokenizer + model; device_map="auto" will place layers on GPU/CPU
-tokenizer = LlamaTokenizer.from_pretrained(MODEL_NAME, use_auth_token=True)
+tokenizer = AutoTokenizer.from_pretrained(
+    MODEL_NAME,
+    token=True,               # HF auth token already cached by `huggingface-cli login`
+)
 
 model = LlamaForCausalLM.from_pretrained(
     MODEL_NAME,
-    load_in_4bit=True,
     device_map="auto",
-    torch_dtype=torch.float16,
+    torch_dtype=torch.float16,  # FP16 weights (≈15 GB VRAM on a T4)
     trust_remote_code=True,
-    use_auth_token = True
+    token=True,
 )
 model.eval()
 
-# ------------------------ Prompt Template ------------------------
-
+# ---------- prompt ----------
 prompt_template = PromptTemplate.from_template(
     """
 SYSTEM:
@@ -134,34 +109,17 @@ ASSISTANT ANSWER:
 """
 )
 
-# ------------------------ `/ask` Endpoint ------------------------
-
+# ---------- /ask ----------
 @app.post("/ask")
-def ask_question(
-    payload: QueryRequest,
-    tenant = Depends(get_tenant_id)
-):
-    """
-    1) Retrieve tenant (dict with "id" and "faq_path") from `get_tenant_id`.
-    2) Load or build FAISS index for that tenant’s FAQ JSON.
-    3) Perform similarity search to get top-K relevant docs.
-    4) Build a prompt combining the retrieved context + user question.
-    5) Run the Hugging Face Llama 3.1 8B model (4-bit) to generate an answer.
-    6) Return {"answer": <string>}.
-    """
+def ask_question(payload: QueryRequest, tenant=Depends(get_tenant_id)):
     query = payload.question
-
-    # 1) Load / cache FAISS index
     index = load_index_for(tenant["id"], tenant["faq_path"])
 
-    # 2) Similarity search (K=2)
-    relevant_docs = index.similarity_search(query, k=2)
-    context = "\n".join(d.page_content for d in relevant_docs) if relevant_docs else ""
+    docs = index.similarity_search(query, k=2)
+    context = "\n".join(d.page_content for d in docs) if docs else ""
 
-    # 3) Build the final prompt
     prompt = prompt_template.format(context=context, question=query)
 
-    # 4) Tokenize & generate
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
         outputs = model.generate(
@@ -173,14 +131,12 @@ def ask_question(
         )
     answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    # 5) If no context was found, return fallback
     if not context:
         return {"answer": "I’m sorry, I don’t know the answer to that."}
-
     return {"answer": answer.strip()}
 
-# ------------------------ Root / Health‐check (Optional) ------------------------
+# ---------- health ----------
 @app.get("/")
-def health_check():
+def health():
     return {"status": "OK"}
 
